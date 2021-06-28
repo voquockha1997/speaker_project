@@ -1,0 +1,9 @@
+prefix=/home/thailien/IOT/iot_sdk/01.CD/3rd.party.raspi
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: OpenSSL
+Description: Secure Sockets Layer and cryptography libraries and tools
+Version: 1.0.2m
+Requires: libssl libcrypto

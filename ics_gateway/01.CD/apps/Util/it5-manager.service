@@ -1,0 +1,11 @@
+[Unit]
+Description=IT5 Manager services
+After=network.target redis.service
+
+[Service]
+Type=simple
+ExecStart=/root/it5-main
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

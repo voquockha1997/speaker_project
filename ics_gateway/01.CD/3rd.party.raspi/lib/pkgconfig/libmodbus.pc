@@ -1,0 +1,10 @@
+prefix=/home/thailien/IOT/iot_sdk/01.CD/3rd.party.raspi
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: modbus
+Description: Modbus library
+Version: 3.1.4
+Libs: -L${libdir} -lmodbus
+Cflags: -I${includedir}/modbus

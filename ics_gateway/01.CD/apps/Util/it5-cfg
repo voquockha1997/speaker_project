@@ -1,0 +1,162 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use JSON::Tiny qw(decode_json encode_json);
+
+my $STATE = `redis-cli get SystemState`;
+my $CFG= `redis-cli get Default_Config`;
+my $JCFG=decode_json($CFG);
+
+printf("SystemState=$STATE\n");
+my ($key, $val) = @ARGV;
+my $cnt = 0;
+my $cfgstr;
+my $cfgstr_raw;
+my $is_raw = 1;
+
+if (not defined $key) {
+    foreach my $item (@{$JCFG}) {
+        printf ("%s\n", $item->{config});
+    }
+    exit;
+} elsif ($key eq "fmt") {
+    print(encode_json($JCFG) . "\n");
+} elsif ($key eq "restore") { 
+    foreach my $c (@{$JCFG}) {
+        my $ckey = $c->{config};
+        $cfgstr = encode_json($c);
+        $cfgstr =~ s/\"/\\\"/g;
+        system("redis-cli set $ckey \"$cfgstr\"");
+    }
+} elsif ($key eq "backup") { 
+    my $new_cfg = "[";
+    my $first = 1;
+    foreach my $c (@{$JCFG}) {
+        if ($first == 0) {
+            $new_cfg .= ",";
+        } else {
+            $first = 0;
+        }
+        
+        my $ckey = $c->{config};
+        $cfgstr = `redis-cli get $ckey`;
+        $new_cfg .= "$cfgstr"
+    }
+    
+    $new_cfg .= "]";
+    $new_cfg =~ s/\"/\\\"/g;
+    
+    system("redis-cli set Default_Config \"$new_cfg\"");
+    printf("Done!");
+} elsif ($key eq "add") {
+    if (not defined $val) {
+        print("Added configuration is missing\n");
+        exit(1);
+    }
+    
+    my $new_cfg = decode_json($val);
+    my $name = $new_cfg->{config};
+    
+    if (not defined $name) {
+        printf("incorrect configuration format!\n");
+        exit (2);
+    }
+    
+    foreach my $item (@{$JCFG}) {
+        if ($name eq $item->{config}) {
+            printf("%s Configuration is existing!\n", $name);
+            exit(3);
+        }
+    }
+
+    push @{$JCFG}, $new_cfg;
+    $cfgstr = encode_json($JCFG);
+    $cfgstr =~ s/\"/\\\"/g;
+    system("redis-cli set Default_Config \"$cfgstr\"");
+    print("Added=$val\n");
+    exit(0);
+} elsif ($key eq "remove") {
+    if (not defined $val) {
+        print("Remove configuration is missing\n");
+        exit(1);
+    }
+    
+    foreach my $item (@{$JCFG}) {
+        if ($val eq $item->{config}) {
+            #system("redis-cli del $val");
+            splice @{$JCFG}, $cnt, 1;
+            $cfgstr = encode_json($JCFG);
+            $cfgstr =~ s/\"/\\\"/g;
+            system("redis-cli set Default_Config \"$cfgstr\"");
+            printf("Done!");
+            exit(0);
+        }
+        $cnt++;
+    }
+    
+    printf("Cannot found configuration item %s\n", $val);
+    exit(1);
+}
+
+my @kpath = split /\./, $key;
+my $kidx = 0;
+
+my %icfg;
+foreach my $item (@{$JCFG}) {
+    if ($kpath[$kidx] eq $item->{config}) {
+        my $name = $kpath[$kidx];
+        print ".$name";
+        $kidx++;
+        
+        if ($kidx == scalar(@kpath)) {
+            if (ref($item) eq "HASH") {
+                $cfgstr = encode_json($item);
+                $cfgstr_raw = $cfgstr;
+                $cfgstr_raw =~ s/\"/\\\"/g;	
+                printf("=%s\n\n%s\n", $cfgstr, $cfgstr_raw);
+            } else {
+                printf("=%s\n", $item);
+            }
+            exit;
+        }
+        
+        while ($kidx < scalar(@kpath)) {
+            for $name (keys %{$item}) 
+            {
+                if ($name eq $kpath[$kidx]) {
+                    print ".$name";
+                    $kidx++;
+                    
+                    if ($kidx == scalar(@kpath)) {
+                        if (not defined $val) {
+                            $item = $item->{$name};
+                            if (ref($item) eq "HASH") {
+                                $cfgstr = encode_json($item);
+                                $cfgstr_raw = $cfgstr;
+                                $cfgstr_raw =~ s/\"/\\\"/g;	
+                                printf("=%s\n\n%s\n", $cfgstr, $cfgstr_raw);
+                            } else {
+                                printf("=%s\n", $item);
+                            }
+                        } else {
+                            $item->{$name} = $val;
+                            $cfgstr = encode_json($JCFG);
+                            $cfgstr =~ s/\"/\\\"/g;
+                            print "\n";
+                            system("redis-cli set Default_Config \"$cfgstr\"");
+                        }
+                        
+                        exit;
+                    }
+                    
+                    $item = %{$item}{$name};
+                }
+            }
+        }
+        
+        last;
+    }
+}
+
+

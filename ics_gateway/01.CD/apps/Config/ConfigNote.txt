@@ -1,0 +1,16 @@
+# 1.0.1
+init config
+ 
+    {
+        "config":"COLLECTOR",
+        "Name":"BTS_Station_DaoThanh",
+        "interval": 60,
+        "sub_devices" : [
+        {
+            "sub_device_id": "xxxxxxx"
+        },
+        {
+            "sub_device_id": "yyyyyy"
+        }
+        ]
+    },

@@ -1,0 +1,71 @@
+Các bước setup config cho RASPI
+Bước 1: Chuẩn bị thẻ nhớ, và đầu đọc thẻ nhớ
+
+Bước 2: Download OS ubuntu-18.04.5-preinstalled-server-arm64+raspi3.img.xz
+
+Bước 3: Dùng tool Imager để flask, sau đó flask OS đã cài đặt ở trên vào trong thẻ nhớ
+
+Bước 4: Sau khi flask xong, vẫn để thẻ nhớ trên laptop và Vào thư mục boot, Ở phân vùng boot:
+
+Bước 4.1: Vào file network-config, Xóa config củ và thêm đoạn config dưới đây và lưu lại:
+Lưu ý: SSID và PW là do laptop của máy hiện tại phát wifi ra được đặt SSID và PW như bên dưới
+#==============#
+version: 2
+ethernets:
+  eth0:
+    dhcp4: no
+    optional: true
+    addresses: [192.168.100.101/24]
+    gateway4: 192.168.100.1
+
+#==============#
+
+Bước 4.2: Tiếp tục ở phân vùng boot, vào file config.txt và thêm đoạn config dưới đây vào dưới cùng và lưu lại:
+#==============#
+
+#setup screen for rpi
+hdmi_drive=1
+max_usb_current=1
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt 1024 600 60 6 0 0 0
+
+#init one wire
+dtoverlay=w1-gpio,gpiopin=18
+
+#==============#
+
+Bước 4.3: Vào file user-data, sửa thành đoạn config sau và lưu lại:
+config củ:
+#==============#
+
+# On first boot, set the (default) ubuntu user's password to "ubuntu" and
+# expire user passwords
+chpasswd:
+  expire: true
+  list:
+  - ubuntu:ubuntu
+
+#==============#
+
+sửa thành config mới như sau:
+#==============#
+# On first boot, set the (default) ubuntu user's password to "ubuntu" and
+# expire user passwords
+chpasswd:
+  expire: false
+  list:
+  - it5:Vnpt@123
+
+system_info:
+  default_user:
+    name: it5
+#==============#
+
+Bước 5: Rút thẻ nhớ ra, cắm vào RASPI và khởi động, lúc này đợi RASPI init đợi khoảng 3-5 phút khi đèn vàng hết nhấp nháy liên tục, 
+Thì ra rút điện ra và cắm lại lúc này củng đợi RASPI restart khoảng 3 phút để RASPI connect network, sau khi connect xong thì IP của Raspi hiện ra, 
+lúc này ta có thể SSH vào.
+
+Bước 6: SSH với user: it5, pw: Vnpt@123
+
+Bước 6: Dùng tool scp để truyền package, sau khi xong ta chạy script để cài đặt package

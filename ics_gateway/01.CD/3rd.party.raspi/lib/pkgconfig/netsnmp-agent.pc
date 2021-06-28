@@ -1,0 +1,12 @@
+prefix=/home/thailien/IOT/iot_sdk/01.CD/3rd.party.raspi
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+
+Name: netsnmp-agent (Net-SNMP)
+Description: SNMP (Simple Network Management Protocol) sub-agent SDK.
+URL: http://www.net-snmp.org
+Version: 5.9
+Cflags: -I${includedir}
+Libs: -L${libdir} -lnetsnmpmibs -lnetsnmpagent -lnetsnmp
+Libs.private:  -ldl -lm    -lm   

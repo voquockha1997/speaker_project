@@ -1,0 +1,151 @@
+#!/bin/bash
+redis-cli -x set MANAGER_INFO << EOF
+{
+    "Children":[
+        {
+            "Command":"/data/it5/bin/it5-bridge",
+            "IsRespawn":true,
+            "MaxSpawnTimes":50,
+            "Priority": 100,
+            "Protocol":"BRIDGE"
+        },
+        {
+           "Command":"/data/it5/bin/it5-m2c-mqtt",
+           "IsRespawn":true,
+           "MaxSpawnTimes":50,
+           "Priority": 100,
+           "Protocol":"MQTT"
+        },
+        {
+            "Command":"/data/it5/bin/it5-m2m-sensor",
+            "IsRespawn":true,
+            "MaxSpawnTimes":50,
+            "Priority": 100,
+            "Protocol":"SENSOR"
+        }
+
+    ],
+    "Host":"127.0.0.1",
+    "Port":6789,
+    "WatchdogInterval": 60,
+    "SysReportInterval": 60,
+    "config":"MANAGER_INFO"
+}
+EOF
+
+
+redis-cli -x set Default_Config << EOF
+[
+    {
+        "DevID":"",
+        "IsLocked":false,
+        "Model":"UBUNTU-HOST",
+        "OTPSecret":"",
+        "PrivateKey":"",
+        "ProductID":"DEMO-PRODUCT",
+        "PublicKey":"",
+        "RegisterState":"None",
+        "RestAPI":"",
+        "RestAPIVer":"",
+        "Token":"",
+        "name": "",
+        "config":"REGISTRATION_INFO"
+    },
+    {
+        "config":"MQTT_BROKER",
+        "host":"10.82.14.239",
+        "port":1883,
+        "queue":"device_log",
+        "queue_ctrl":"receive_cmd",
+        "state":1,
+        "topic_data":"data_channel",
+        "topic_ctrl":"message_delivery"
+    },
+
+
+    {
+        "Restrict":[
+
+        ],
+        "Servers":[
+
+        ],
+        "config":"NTP"
+    },
+    {
+        "DNS":[
+            "8.8.4.4",
+            "8.8.8.8"
+        ],
+        "Itfs":[
+            {
+                "Name":"it5",
+                "IP":"192.168.1.168",
+                "Subnet":"255.255.255.0",
+                "Gateway":"192.168.1.1",
+                "IsDefault":true,
+                "Type":"bridge",
+                "Mode":"static"
+            }
+        ],
+        "config":"NETWORK"
+    }
+]
+EOF
+
+
+redis-cli -x set SENSOR_GROUP << EOF
+{
+    "Sensors":[
+        {
+            "description":"Room Temperature",
+            "tag":"RoomTemperature",
+            "high":35,
+            "low":0,
+            "state": 1,
+            "alarm_level":"Warning",
+            "mac_addr": "28-3c01d6079af5"
+        },
+        {
+            "description":"Outdoor Temperature",
+            "tag":"OutdoorTemperature",
+            "high":1,
+            "low":0,
+            "state": 1,
+            "alarm_level":"Warning",
+            "mac_addr": "28-3c01d607ca0f"
+        }
+    ],
+    "interval": 10,
+    "config":"SENSOR_GROUP"
+}
+EOF
+
+
+redis-cli -x set DEFAULT_RELAY << EOF
+{
+    "Relays":[
+        {
+            "description":"Relay 1 of Air Conditional",
+            "tag":"AirCondition1State",
+            "state": 0,
+            "gpio": 23,
+            "index":1
+        },
+        {
+            "description":"Relay 2 of Air Conditional",
+            "tag":"AirCondition2State",
+            "state": 0,
+            "gpio": 24,
+            "index": 2
+        }
+    ],
+    "interval": 10,
+    "config":"DEFAULT_RELAY"
+}
+EOF
+
+/data/it5/util/it5-cfg restore
+
+mkdir -p /data/redis
+redis-cli set SystemState Running

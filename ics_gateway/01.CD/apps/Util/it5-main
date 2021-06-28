@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#----------------------------------------------------------------------
+# MAIN
+#----------------------------------------------------------------------
+SystemState=$(redis-cli get SystemState)
+
+#----------------------------------------------------------------------
+# FIRST INSTALL SERVICE : state is empty
+#----------------------------------------------------------------------
+while [ -z "$SystemState" ] || [ "$SystemState" == "InstallFailed" ]; do
+    SystemState=$(redis-cli get SystemState)
+    sleep 3 # waiting 
+done
+
+LD_LIBRARY_PATH=/data/it5/lib:$LD_LIBRARY_PATH /data/it5/bin/it5-manager
